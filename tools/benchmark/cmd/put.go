@@ -30,7 +30,6 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
 	"golang.org/x/time/rate"
-	"gopkg.in/cheggaaa/pb.v1"
 )
 
 // putCmd represents the put command
@@ -85,10 +84,6 @@ func putFunc(cmd *cobra.Command, args []string) {
 	clients := mustCreateClients(totalClients, totalConns)
 	k, v := make([]byte, keySize), string(mustRandBytes(valSize))
 
-	bar = pb.New(putTotal)
-	bar.Format("Bom !")
-	bar.Start()
-
 	r := newReport()
 	for i := range clients {
 		wg.Add(1)
@@ -100,7 +95,6 @@ func putFunc(cmd *cobra.Command, args []string) {
 				st := time.Now()
 				_, err := c.Do(context.Background(), op)
 				r.Results() <- report.Result{Err: err, Start: st, End: time.Now()}
-				bar.Increment()
 			}
 		}(clients[i])
 	}
@@ -129,7 +123,6 @@ func putFunc(cmd *cobra.Command, args []string) {
 	rc := r.Run()
 	wg.Wait()
 	close(r.Results())
-	bar.Finish()
 	fmt.Println(<-rc)
 
 	if checkHashkv {
